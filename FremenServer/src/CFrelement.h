@@ -39,10 +39,10 @@ class CFrelement
 		int add(uint32_t times[],float states[],int length);
 
 		//estimates the probability for the given times 
-		int estimate(uint32_t times[],float probs[],int length,int order);
+		int estimate(uint32_t times[],float probs[],int length,int order,bool recency = true);
 
 		//estimates the state's entropy for the given times 
-		int estimateEntropy(uint32_t times[],float entropy[],int length,int order);
+		int estimateEntropy(uint32_t times[],float entropy[],int length,int order,bool recency = true);
 
 		//evaluates the error of the predictions for the given times and measurements
 		int evaluate(uint32_t* times,unsigned char* signal,int length,int orderi,float* evals);
@@ -56,6 +56,10 @@ class CFrelement
 		int load(char* name);
 		
 		float gain;
+		float rate;
+		int numChanges;
+		int64_t lastChange;
+		unsigned char lastState;
 		char id[MAX_ID_LENGTH];
 		SFrelement frelements[NUM_PERIODICITIES];
 		int measurements;

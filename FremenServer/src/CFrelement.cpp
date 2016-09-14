@@ -20,6 +20,8 @@ CFrelement::CFrelement(const char* name)
 	firstTime = -1;
 	lastTime = -1;
 	measurements = 0;
+	numChanges = 0;
+	lastChange = 0;
 }
 
 CFrelement::~CFrelement()
@@ -82,6 +84,17 @@ int CFrelement::add(uint32_t times[],float states[],int length)
 			frelements[i].realBalance  += gain*cos(angle);
 			frelements[i].imagBalance  += gain*sin(angle);
 		}
+
+		//recalculate the recency model
+		if (lastTime < times[j]){
+			if (states[j] != lastState){ 
+				rate = 1.0/(numChanges+1)*(numChanges*rate+2.0/(times[j]-lastChange));
+				lastChange = times[j];
+				numChanges++;
+			}
+		}
+		lastState = states[j];
+		lastTime = times[j];
 	}
 	measurements+=length;
 
@@ -154,7 +167,7 @@ void CFrelement::print(int orderi)
 	std::cout << endl; 
 }
 
-int CFrelement::estimate(uint32_t times[],float probs[],int length,int orderi)
+int CFrelement::estimate(uint32_t times[],float probs[],int length,int orderi,bool recency)
 {
 	float estimate = 0;
 	float time;
@@ -163,6 +176,7 @@ int CFrelement::estimate(uint32_t times[],float probs[],int length,int orderi)
 		time = times[j];
 		estimate = gain;
 		for (int i = 0;i<orderi;i++) estimate+=2*frelements[i].amplitude*cos(time/frelements[i].period*2*M_PI-frelements[i].phase);
+		if (recency) estimate += ((float)lastState - estimate)*exp(-rate*fabs(times[j]-lastTime));
 		if (estimate > 1.0) estimate =  1.0;
 		if (estimate < 0.0) estimate =  0.0;
 		probs[j]=estimate;
@@ -170,7 +184,7 @@ int CFrelement::estimate(uint32_t times[],float probs[],int length,int orderi)
 	return length;
 }
 
-int CFrelement::estimateEntropy(uint32_t times[],float entropy[],int length,int orderi)
+int CFrelement::estimateEntropy(uint32_t times[],float entropy[],int length,int orderi,bool recency)
 {
 	float estimate = 0;
 	float time;
@@ -179,6 +193,7 @@ int CFrelement::estimateEntropy(uint32_t times[],float entropy[],int length,int 
 		time = times[j];
 		estimate = gain;
 		for (int i = 0;i<orderi;i++) estimate+=2*frelements[i].amplitude*cos(time/frelements[i].period*2*M_PI-frelements[i].phase);
+		if (recency) estimate += ((float)lastState - estimate)*exp(-rate*fabs(times[j]-lastTime));
 		if (estimate <= 0 || estimate >= 1) entropy[j] = 0; else  entropy[j] = -(estimate*log2f(estimate)+(1-estimate)*log2f((1-estimate)));
 	}
 	return length;
