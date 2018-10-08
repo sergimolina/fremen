@@ -13,7 +13,7 @@ CFrelement::CFrelement()
 {
 	//initialization of the frequency set
 	for (int i=0;i<NUM_PERIODICITIES;i++) frelements[i].amplitude = frelements[i].phase = 0; 
-	for (int i=0;i<NUM_PERIODICITIES;i++) frelements[i].period = (7*24*3600)/(i+1); 
+	for (int i=0;i<NUM_PERIODICITIES;i++) frelements[i].period = (24*3600)/(i+1); 
 	gain = 0.5;
 	firstTime = -1;
 	lastTime = -1;
